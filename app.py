@@ -21,6 +21,7 @@ from excel_template import (
 )
 from utils import extract_1688_offer_id
 from validators import (
+    filter_images_by_min_long_side,
     validate_image_urls,
     validate_package_dimensions,
     validate_price,
@@ -90,6 +91,10 @@ PRODUCT_FORM_DEFAULTS: dict[str, Any] = {
 if st.session_state.pop("reset_product_form_pending", False):
     for default_key, default_value in PRODUCT_FORM_DEFAULTS.items():
         st.session_state[default_key] = default_value
+
+pending_image_filter_messages = st.session_state.pop("pending_image_filter_messages", [])
+for message in pending_image_filter_messages:
+    st.warning(message)
 
 
 def clean_text(value: Any) -> str:
@@ -464,7 +469,10 @@ if st.button("导入 1688 JSON"):
                 merged_images = [str(url) for url in images if url]
                 if isinstance(detail_images, list):
                     merged_images.extend(str(url) for url in detail_images if url and str(url) not in merged_images)
-                st.session_state["image_urls_raw"] = "\n".join(merged_images[:6])
+                kept_images, removed_image_messages = filter_images_by_min_long_side(merged_images)
+                st.session_state["image_urls_raw"] = "\n".join(kept_images)
+                if removed_image_messages:
+                    st.session_state["pending_image_filter_messages"] = removed_image_messages
             package = imported.get("package") or {}
             if package.get("weight_kg"):
                 st.session_state["weight"] = str(package["weight_kg"])
@@ -742,6 +750,13 @@ if add_current_product or add_and_continue:
     if template_file is None:
         st.error("请先上传官方 Excel 模版。")
     else:
+        kept_images, removed_image_messages = filter_images_by_min_long_side(image_urls)
+        if removed_image_messages:
+            st.session_state["image_urls_raw"] = "\n".join(kept_images)
+            st.session_state["pending_image_filter_messages"] = removed_image_messages + [
+                "已自动删除不合格图片，请检查剩余图片后再次点击确认添加。"
+            ]
+            st.rerun()
         errors = validate_current_product()
 
         if errors:

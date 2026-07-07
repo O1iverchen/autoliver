@@ -1,8 +1,15 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
+from io import BytesIO
 from typing import Any
 from urllib.parse import urlparse
+
+import requests
+from PIL import Image, UnidentifiedImageError
+
+
+MIN_IMAGE_LONG_SIDE_PX = 750
 
 
 def validate_image_urls(image_urls: list[str]) -> list[str]:
@@ -15,6 +22,43 @@ def validate_image_urls(image_urls: list[str]) -> list[str]:
         if parsed.scheme not in {"http", "https"} or not parsed.netloc:
             errors.append(f"第 {index} 张图片不是有效的 http/https 直链。")
     return errors
+
+
+def get_remote_image_size(url: str, timeout: int = 8) -> tuple[int, int]:
+    response = requests.get(url, timeout=timeout, headers={"User-Agent": "Mozilla/5.0"})
+    response.raise_for_status()
+    with Image.open(BytesIO(response.content)) as image:
+        return image.size
+
+
+def filter_images_by_min_long_side(
+    image_urls: list[str],
+    min_long_side: int = MIN_IMAGE_LONG_SIDE_PX,
+) -> tuple[list[str], list[str]]:
+    kept: list[str] = []
+    removed_messages: list[str] = []
+    cleaned = [url.strip() for url in image_urls if url and url.strip()]
+
+    for index, url in enumerate(cleaned, start=1):
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            removed_messages.append(f"第 {index} 张图片已删除：不是有效的 http/https 直链。")
+            continue
+        try:
+            width, height = get_remote_image_size(url)
+        except (requests.RequestException, UnidentifiedImageError, OSError) as exc:
+            removed_messages.append(f"第 {index} 张图片已删除：无法读取图片尺寸（{exc}）。")
+            continue
+
+        long_side = max(width, height)
+        if long_side < min_long_side:
+            removed_messages.append(
+                f"第 {index} 张图片已删除：图片较长边应大于或等于 {min_long_side}，实际为 {long_side}。"
+            )
+            continue
+        kept.append(url)
+
+    return kept[:6], removed_messages
 
 
 def validate_price(value: str, field_name: str = "价格") -> list[str]:
