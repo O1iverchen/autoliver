@@ -16,11 +16,11 @@ HEADER_ROW = 3
 DATA_ROW = 4
 
 
-def build_excel_sku(source_url: str, fallback_prefix: str = "SKU") -> str:
+def build_excel_sku(source_url: str, fallback_prefix: str = "SKU", seller_prefix: str = "tonyxu66") -> str:
     offer_id = extract_1688_offer_id(source_url)
     if offer_id:
-        return f"1688_{offer_id}"
-    return f"{fallback_prefix}_{now_timestamp()}"
+        return f"{seller_prefix}_1688_{offer_id}"
+    return f"{seller_prefix}_{fallback_prefix}_{now_timestamp()}"
 
 
 def _load_workbook_from_bytes(template_bytes: bytes):
