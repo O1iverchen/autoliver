@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 12px;
+        width: 280px;
+      }
+      button {
+        width: 100%;
+        padding: 8px 10px;
+        cursor: pointer;
+      }
+      #status {
+        color: #444;
+        font-size: 12px;
+        line-height: 1.45;
+        margin-top: 10px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <button id="export">导出当前 1688 商品 JSON</button>
+    <div id="status">请先打开一个 1688 商品详情页。</div>
+    <script src="popup.js"></script>
+  </body>
+</html>

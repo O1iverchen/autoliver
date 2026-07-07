@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "1688 Product Exporter",
+  "version": "0.1.7",
+  "description": "Export visible 1688 product page data to JSON for the AliExpress Russia Excel tool.",
+  "permissions": ["activeTab", "scripting", "downloads"],
+  "host_permissions": ["https://*.1688.com/*", "http://*.1688.com/*"],
+  "action": {
+    "default_title": "Export 1688 Product",
+    "default_popup": "popup.html"
+  }
+}

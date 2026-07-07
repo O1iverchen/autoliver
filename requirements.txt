@@ -1,0 +1,6 @@
+streamlit>=1.36
+requests>=2.32
+python-dotenv>=1.0
+pydantic>=2.8
+pytest>=8.2
+openpyxl>=3.1
